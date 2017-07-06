@@ -13,6 +13,23 @@ cd vbot-tuling
 composer install
 ```
 
+主动发消息需要安装[swoole](https://github.com/swoole/swoole-src/)
+
+* Install via pecl
+
+    `pecl install swoole`
+
+* Install from source
+
+    ```
+    sudo apt-get install php7.0-dev
+    git clone https://github.com/swoole/swoole-src.git
+    cd swoole-src
+    phpize
+    ./configure
+    make && make install
+    ```
+
 ### 运行
 
 ```

@@ -9,7 +9,7 @@ $options = [
     'swoole'  => [
         'status' => true,
         'ip'     => '127.0.0.1',
-        'port'   => '8868',
+        'port'   => '8869',
     ],
     /*
      * 下载配置项
