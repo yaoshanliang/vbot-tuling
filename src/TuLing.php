@@ -22,8 +22,10 @@ class TuLing extends AbstractMessageHandler
             $username = $message['from']['UserName'];
 
             if ($message['pure'] == '聊天') {
-                Text::send($username, '你要聊什么呢?');
+                Text::send($username, '恭喜你解锁聊天功能, 你要聊什么呢?');
                 self::$users[$username]['tuling_id'] = $this->generateId();
+            } elseif($message['pure'] == '不聊了') {
+                unset(self::$users[$username]['tuling_id']);
             } elseif (isset(self::$users[$username]['tuling_id'])) {
                 $response = $this->reply($message['pure'], self::$users[$username]['tuling_id']);
 
@@ -33,9 +35,12 @@ class TuLing extends AbstractMessageHandler
                     case 100000:
                         Text::send($username, $response['text']);
                         break;
+
+                    // 链接类
                     case 200000:
                         Text::send($username, $response['text'] . ' ' . $response['url']);
                         break;
+
                     default:
                         var_dump($response);
                         break;
@@ -66,9 +71,8 @@ class TuLing extends AbstractMessageHandler
         }
     }
 
-    /**
-     * 注册拓展时的操作.
-     */
+
+    // 注册拓展时的操作
     public function register()
     {
 
