@@ -23,5 +23,4 @@ php run.php
 
 退出关键字:**不聊了**
 
-<img src="http://osnrkuxuq.bkt.clouddn.com/WechatIMG180.jpeg" width="360px">
-<img src="http://osnrkuxuq.bkt.clouddn.com/WechatIMG179.jpeg" style="padding-left: 20px" width="360px">
+<img src="http://osnrkuxuq.bkt.clouddn.com/WechatIMG180.jpeg" width="360px">    <img src="http://osnrkuxuq.bkt.clouddn.com/WechatIMG179.jpeg" style="padding-left: 20px" width="360px">
