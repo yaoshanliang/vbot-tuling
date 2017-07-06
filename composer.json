@@ -1,5 +1,22 @@
 {
-    "require": {
+    "name": "yaoshanliang/vbot-tuling",
+    "description": "微信 图灵 机器人",
+    "keywords": [
+        "微信", "图灵", "机器人"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "iat",
+            "email": "i@iat.net.cn"
+        }
+    ],
+    "require-dev": {
         "hanson/vbot": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vbot\\TuLing\\": "src/"
+        }
     }
 }
