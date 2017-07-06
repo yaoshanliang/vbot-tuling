@@ -20,7 +20,6 @@ class TuLing extends AbstractMessageHandler
     {
         if ($message['type'] === 'text') {
             $username = $message['from']['UserName'];
-            vbot('console')->log($this->generateId(), Console::INFO);
 
             if ($message['pure'] == '聊天') {
                 Text::send($username, '你要聊什么呢?');
@@ -28,14 +27,24 @@ class TuLing extends AbstractMessageHandler
             } elseif (isset(self::$users[$username]['tuling_id'])) {
                 $response = $this->reply($message['pure'], self::$users[$username]['tuling_id']);
 
-                // 100000: 文本消息
-                if (100000 == $response['code']) {
-                    Text::send($username, $response['text']);
+                switch ($response['code']) {
+
+                    // 文本类
+                    case 100000:
+                        Text::send($username, $response['text']);
+                        break;
+                    case 200000:
+                        Text::send($username, $response['text'] . ' ' . $response['url']);
+                        break;
+                    default:
+                        var_dump($response);
+                        break;
                 }
             }
         }
     }
 
+    // 生成ID,用户图灵上下文（微信username为64位）
     private function generateId() {
         $time = explode(' ', microtime());
         return $time [1] . ($time[0] * 1000000);
