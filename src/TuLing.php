@@ -4,6 +4,7 @@ namespace Vbot\TuLing;
 
 use Vbot\Http\Http;
 use Hanson\Vbot\Message\Text;
+use Hanson\Vbot\Message\Emoticon;
 use Hanson\Vbot\Console\Console;
 use Illuminate\Support\Collection;
 use Hanson\Vbot\Extension\AbstractMessageHandler;
@@ -18,10 +19,21 @@ class TuLing extends AbstractMessageHandler
 
     public function handler(Collection $message)
     {
-        if ($message['type'] === 'text') {
-            $username = $message['from']['UserName'];
+        $username = $message['from']['UserName'];
 
-            if ($message['fromType'] === 'Friend') {
+        if ($message['fromType'] === 'Friend') {
+            return $this->autoReplyFriend($username, $message);
+        } elseif ($message['fromType'] === 'Group') {
+            return $this->autoReplyGroup($username, $message);
+        }
+    }
+
+
+    // 回复好友
+    private function autoReplyFriend($username, $message)
+    {
+        try {
+            if ($message['type'] == 'text') {
                 if ($message['pure'] == '聊天') {
                     Text::send($username, '恭喜你解锁聊天功能, 你要聊什么呢?');
                     self::$users[$username]['tuling_id'] = $this->generateId();
@@ -29,11 +41,26 @@ class TuLing extends AbstractMessageHandler
                     unset(self::$users[$username]['tuling_id']);
                     Text::send($username, '拜拜哦~');
                 } elseif (isset(self::$users[$username]['tuling_id'])) {
-                    return $this->tulingReply($username, $message['content']);
+                    Text::send($username, $this->tulingReply($message['pure'], self::$users[$username]['tuling_id']));
                 }
-            } elseif ($message['fromType'] === 'Group' && $message['isAt']) {
-                return $this->tulingReply($username, $message['pure']);
             }
+            if ($message['type'] == 'emoticon') {
+                Emoticon::sendRandom($username);
+            }
+        } catch (\Exception $e) {
+            vbot('console')->log($e->getMessage(), Console::ERROR);
+        }
+    }
+
+    // 回复群
+    private function autoReplyGroup($username, $message)
+    {
+        try {
+            if (($message['type'] == 'text') && $message['isAt']) {
+                Text::send($username, $this->tulingReply($message['pure']));
+            }
+        } catch (\Exception $e) {
+            vbot('console')->log($e->getMessage(), Console::ERROR);
         }
     }
 
@@ -43,19 +70,13 @@ class TuLing extends AbstractMessageHandler
         return $time [1] . ($time[0] * 1000000);
     }
 
-    // 图灵
-    private function tulingReply($username, $content)
+    // 图灵回复
+    private function tulingReply($content, $id = 0)
     {
         try {
-            if (! isset(self::$users[$username]['tuling_id'])) {
-                $id = $this->generateId();
-            } else {
-                $id = self::$users[$username]['tuling_id'];
-            }
-
             $response = vbot('http')->post($this->api, [
-                'key'    => $this->key,
-                'info'   => $content,
+                'key' => $this->key,
+                'info' => $content,
                 'userid' => $id,
             ], true);
 
@@ -63,25 +84,22 @@ class TuLing extends AbstractMessageHandler
 
                 // 文本类
                 case 100000:
-                    Text::send($username, $response['text']);
+                    return $response['text'];
                     break;
 
                 // 链接类
                 case 200000:
-                    Text::send($username, $response['text'] . ' ' . $response['url']);
+                    return $response['text'] . ' ' . $response['url'];
                     break;
 
                 default:
-                    var_dump($response);
+                    return '';
                     break;
             }
         } catch (\Exception $e) {
             vbot('console')->log($e->getMessage(), Console::ERROR);
-
-            return ['code' => 0];
         }
     }
-
 
     // 注册拓展时的操作
     public function register()
