@@ -21,30 +21,18 @@ class TuLing extends AbstractMessageHandler
         if ($message['type'] === 'text') {
             $username = $message['from']['UserName'];
 
-            if ($message['pure'] == '聊天') {
-                Text::send($username, '恭喜你解锁聊天功能, 你要聊什么呢?');
-                self::$users[$username]['tuling_id'] = $this->generateId();
-            } elseif($message['pure'] == '不聊了') {
-                unset(self::$users[$username]['tuling_id']);
-            } elseif (isset(self::$users[$username]['tuling_id'])) {
-                $response = $this->reply($message['pure'], self::$users[$username]['tuling_id']);
-
-                switch ($response['code']) {
-
-                    // 文本类
-                    case 100000:
-                        Text::send($username, $response['text']);
-                        break;
-
-                    // 链接类
-                    case 200000:
-                        Text::send($username, $response['text'] . ' ' . $response['url']);
-                        break;
-
-                    default:
-                        var_dump($response);
-                        break;
+            if ($message['fromType'] === 'Friend') {
+                if ($message['pure'] == '聊天') {
+                    Text::send($username, '恭喜你解锁聊天功能, 你要聊什么呢?');
+                    self::$users[$username]['tuling_id'] = $this->generateId();
+                } elseif($message['pure'] == '不聊了') {
+                    unset(self::$users[$username]['tuling_id']);
+                    Text::send($username, '拜拜哦~');
+                } elseif (isset(self::$users[$username]['tuling_id'])) {
+                    return $this->tulingReply($username, $message['content']);
                 }
+            } elseif ($message['fromType'] === 'Group' && $message['isAt']) {
+                return $this->tulingReply($username, $message['pure']);
             }
         }
     }
@@ -56,14 +44,37 @@ class TuLing extends AbstractMessageHandler
     }
 
     // 图灵
-    private function reply($content, $id)
+    private function tulingReply($username, $content)
     {
         try {
-            return vbot('http')->post($this->api, [
+            if (! isset(self::$users[$username]['tuling_id'])) {
+                $id = $this->generateId();
+            } else {
+                $id = self::$users[$username]['tuling_id'];
+            }
+
+            $response = vbot('http')->post($this->api, [
                 'key'    => $this->key,
                 'info'   => $content,
                 'userid' => $id,
             ], true);
+
+            switch ($response['code']) {
+
+                // 文本类
+                case 100000:
+                    Text::send($username, $response['text']);
+                    break;
+
+                // 链接类
+                case 200000:
+                    Text::send($username, $response['text'] . ' ' . $response['url']);
+                    break;
+
+                default:
+                    var_dump($response);
+                    break;
+            }
         } catch (\Exception $e) {
             vbot('console')->log($e->getMessage(), Console::ERROR);
 
