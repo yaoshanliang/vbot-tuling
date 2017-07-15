@@ -20,6 +20,8 @@ class TuLing extends AbstractMessageHandler
 
     private static $users = [];
 
+    private static $extensionConfig = [];
+
     public function handler(Collection $message)
     {
         $username = $message['from']['UserName'];
@@ -44,6 +46,9 @@ class TuLing extends AbstractMessageHandler
                     unset(self::$users[$username]['tuling_id']);
                     Text::send($username, '拜拜哦~');
                 } elseif (isset(self::$users[$username]['tuling_id'])) {
+                    Text::send($username, $this->tulingReply($message['pure'], self::$users[$username]['tuling_id']));
+                } elseif (in_array($message['from']['RemarkName'], self::$extensionConfig['friend']['RemarkName'])) {
+                    self::$users[$username]['tuling_id'] = $this->generateId();
                     Text::send($username, $this->tulingReply($message['pure'], self::$users[$username]['tuling_id']));
                 }
             }
@@ -71,9 +76,18 @@ class TuLing extends AbstractMessageHandler
     private function autoReplyGroup($username, $message)
     {
         try {
-            if (($message['type'] === 'text') && $message['isAt']) {
-                Text::send($username, $this->tulingReply($message['pure']));
+            if ($message['type'] === 'text'){
+                if (isset(self::$users[$username]['tuling_id'])) {
+                    Text::send($username, $this->tulingReply($message['pure'], self::$users[$username]['tuling_id']));
+                } elseif (in_array($message['from']['NickName'], self::$extensionConfig['group']['NickName'])) {
+                    self::$users[$username]['tuling_id'] = $this->generateId();
+                    Text::send($username, $this->tulingReply($message['pure'], self::$users[$username]['tuling_id']));
+                }
+                if ($message['isAt']) {
+                    Text::send($username, $this->tulingReply($message['pure']));
+                }
             }
+
             if ($message['type'] === 'red_packet') {
                 $myself = vbot('myself');
                 $groupNickname = $message['from']['NickName'];
@@ -125,6 +139,6 @@ class TuLing extends AbstractMessageHandler
     // 注册拓展时的操作
     public function register()
     {
-
+        static::$extensionConfig = require_once 'config.php';
     }
 }
